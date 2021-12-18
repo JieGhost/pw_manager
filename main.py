@@ -54,8 +54,6 @@ class PasswordManager(object):
             # pdb.set_trace()
             self._domain_pw_dict[domain] = pw
 
-        print(self._encryption_key)
-
     def Get(self, domain: str) -> str:
         domain_bytes = domain.encode()
         if (domain_bytes not in self._domain_pw_dict):
@@ -65,9 +63,7 @@ class PasswordManager(object):
         return self._f.decrypt(pw).decode()
 
     def Set(self, domain: str, pw: str) -> None:
-        print(len(self._domain_pw_dict))
         self._domain_pw_dict[domain.encode()] = self._f.encrypt(pw.encode())
-        print(len(self._domain_pw_dict))
 
     def Persist(self) -> None:
         with open(self._data_file, 'wb') as fp:
