@@ -49,9 +49,7 @@ class PasswordManager(object):
         self._f = Fernet(self._encryption_key)
         self._domain_pw_dict = dict()
         for domain_pw_entry in entries:
-            # import pdb;pdb.set_trace()
             domain, pw = domain_pw_entry.strip().split(b':')
-            # pdb.set_trace()
             self._domain_pw_dict[domain] = pw
 
     def Get(self, domain: str) -> str:
