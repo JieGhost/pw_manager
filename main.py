@@ -1,7 +1,8 @@
 import argparse
 import base64
 import os
-from typing import Iterator
+from abc import ABC, abstractmethod
+from typing import Dict, List
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
@@ -13,7 +14,11 @@ def InitArgParser():
         description='Weclome to password manager.')
     parser.add_argument('command', choices=['init', 'add', 'get', 'list'],
                         help='a command to run')
-    parser.add_argument('--filepath',
+    parser.add_argument('--saltfilepath',
+                        default=os.path.join(os.path.dirname(
+                            __file__), 'data/salt'),
+                        help='the path to the salt file')
+    parser.add_argument('--datafilepath',
                         default=os.path.join(os.path.dirname(
                             __file__), 'data/raw_data'),
                         help='the path to the raw data file')
@@ -25,19 +30,84 @@ def InitArgParser():
     return parser
 
 
-def InitPasswordManager(data_file: str):
+def InitPasswordManager(salt_file: str):
     salt = os.urandom(16)
-    with open(data_file, 'wb') as fp:
+    with open(salt_file, 'wb') as fp:
         fp.write(salt)
 
 
-class PasswordManager(object):
-    def __init__(self, data_file: str, root_key: str) -> None:
+def GetSalt(salt_file: str) -> bytes:
+    with open(salt_file, 'rb') as fp:
+        salt = fp.read()
+    return salt
+
+
+class Storage(ABC):
+    @abstractmethod
+    def Get(self, domain: bytes) -> bytes:
+        pass
+
+    @abstractmethod
+    def Set(self, domain: bytes, encrypted_password: bytes) -> None:
+        pass
+
+    @abstractmethod
+    def List(self) -> List[bytes]:
+        pass
+
+
+class LocalFileStorage(Storage):
+    def __init__(self, file_path: str) -> None:
         super().__init__()
-        self._data_file = data_file
-        with open(self._data_file, 'rb') as fp:
-            self._salt = fp.readline().strip()
+        self._file_path = file_path
+        self._entries = dict()
+
+    def Get(self, domain: bytes) -> bytes:
+        m = self._LoadFile()
+        if domain not in m:
+            raise KeyError('domain {} not found'.format(domain))
+        return m[domain]
+
+    def Set(self, domain: bytes, encrypted_password: bytes) -> None:
+        m = self._LoadFile()
+        m[domain] = encrypted_password
+        self._WriteFile(m)
+
+    def List(self) -> List[bytes]:
+        m = self._LoadFile()
+        return m.keys()
+
+    def _LoadFile(self) -> Dict[bytes, bytes]:
+        if not os.path.exists(self._file_path):
+            return dict()
+
+        with open(self._file_path, 'rb') as fp:
             entries = fp.readlines()
+
+        m = dict()
+        for entry in entries:
+            if len(entry) == 0:
+                continue
+            domain, encrypted_password = entry.strip().split(b':')
+            m[domain] = encrypted_password
+
+        return m
+
+    def _WriteFile(self, m: Dict[bytes, bytes]) -> None:
+        with open(self._file_path, 'wb') as fp:
+            for domain, encrypted_password in m.items():
+                fp.write(b':'.join([domain, encrypted_password]))
+                fp.write(b'\n')
+
+
+class PasswordManager(object):
+    def __init__(self, root_key: bytes, salt: bytes, storage: Storage) -> None:
+        super().__init__()
+
+        self._root_key = root_key
+        self._salt = salt
+        self._storage = storage
+
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
@@ -45,50 +115,36 @@ class PasswordManager(object):
             iterations=390000,
         )
         self._encryption_key = base64.urlsafe_b64encode(
-            kdf.derive(root_key.encode()))
+            kdf.derive(self._root_key))
         self._f = Fernet(self._encryption_key)
-        self._domain_pw_dict = dict()
-        for domain_pw_entry in entries:
-            domain, pw = domain_pw_entry.strip().split(b':')
-            self._domain_pw_dict[domain] = pw
 
-    def Get(self, domain: str) -> str:
-        domain_bytes = domain.encode()
-        if (domain_bytes not in self._domain_pw_dict):
-            raise KeyError('domain {} not found'.format(domain))
+    def RetrievePassword(self, domain: str) -> str:
+        encrypted_password = self._storage.Get(domain.encode())
+        return self._f.decrypt(encrypted_password).decode()
 
-        pw = self._domain_pw_dict[domain_bytes]
-        return self._f.decrypt(pw).decode()
+    def StorePassword(self, domain: str, password: str) -> None:
+        self._storage.Set(domain.encode(), self._f.encrypt(password.encode()))
 
-    def Set(self, domain: str, pw: str) -> None:
-        self._domain_pw_dict[domain.encode()] = self._f.encrypt(pw.encode())
-
-    def Persist(self) -> None:
-        with open(self._data_file, 'wb') as fp:
-            fp.write(self._salt)
-            for domain, pw in self._domain_pw_dict.items():
-                fp.write(b'\n')
-                fp.write(b':'.join([domain, pw]))
-
-    def List(self) -> Iterator[str]:
-        return (d.decode() for d in self._domain_pw_dict.keys())
+    def ListDomains(self) -> List[str]:
+        return (d.decode() for d in self._storage.List())
 
 
 def main():
     parser = InitArgParser()
     args = parser.parse_args()
     if args.command == 'init':
-        InitPasswordManager(args.filepath)
+        InitPasswordManager(args.saltfilepath)
         return
 
-    pwm = PasswordManager(args.filepath, args.rootkey)
+    storage = LocalFileStorage(args.datafilepath)
+    pwm = PasswordManager(args.rootkey.encode(),
+                          GetSalt(args.saltfilepath), storage)
     if args.command == 'add':
-        pwm.Set(args.domain, args.password)
-        pwm.Persist()
+        pwm.StorePassword(args.domain, args.password)
     elif args.command == 'get':
-        print(pwm.Get(args.domain))
+        print(pwm.RetrievePassword(args.domain))
     elif args.command == 'list':
-        print('\n'.join(pwm.List()))
+        print('\n'.join(pwm.ListDomains()))
 
 
 if __name__ == '__main__':
