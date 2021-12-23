@@ -1,12 +1,13 @@
 import argparse
 import base64
 import os
-from abc import ABC, abstractmethod
 from typing import Dict, List
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+from storage import Storage
 
 
 def InitArgParser():
@@ -40,20 +41,6 @@ def GetSalt(salt_file: str) -> bytes:
     with open(salt_file, 'rb') as fp:
         salt = fp.read()
     return salt
-
-
-class Storage(ABC):
-    @abstractmethod
-    def Get(self, domain: bytes) -> bytes:
-        pass
-
-    @abstractmethod
-    def Set(self, domain: bytes, encrypted_password: bytes) -> None:
-        pass
-
-    @abstractmethod
-    def List(self) -> List[bytes]:
-        pass
 
 
 class LocalFileStorage(Storage):
