@@ -1,12 +1,14 @@
 import argparse
 import base64
 import os
-from typing import Dict, List
+from typing import List
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
+from datastore import DatastoreStorage
+from localfilestore import LocalFileStorage
 from storage import Storage
 
 
@@ -19,6 +21,12 @@ def InitArgParser():
                         default=os.path.join(os.path.dirname(
                             __file__), 'data/salt'),
                         help='the path to the salt file')
+    parser.add_argument('--storage_backend', choices=[
+                        'local', 'bigtable', 'datastore'],  default='local', help='the storage backend')
+    parser.add_argument('--datastore_json',
+                        default=os.path.join(os.path.dirname(
+                            __file__), 'gcloud-service-accounts/passwordmanager-datastore-admin.json'),
+                        help='the path to the datastore service account json file')
     parser.add_argument('--datafilepath',
                         default=os.path.join(os.path.dirname(
                             __file__), 'data/raw_data'),
@@ -41,50 +49,6 @@ def GetSalt(salt_file: str) -> bytes:
     with open(salt_file, 'rb') as fp:
         salt = fp.read()
     return salt
-
-
-class LocalFileStorage(Storage):
-    def __init__(self, file_path: str) -> None:
-        super().__init__()
-        self._file_path = file_path
-        self._entries = dict()
-
-    def Get(self, domain: bytes) -> bytes:
-        m = self._LoadFile()
-        if domain not in m:
-            raise KeyError('domain {} not found'.format(domain))
-        return m[domain]
-
-    def Set(self, domain: bytes, encrypted_password: bytes) -> None:
-        m = self._LoadFile()
-        m[domain] = encrypted_password
-        self._WriteFile(m)
-
-    def List(self) -> List[bytes]:
-        m = self._LoadFile()
-        return m.keys()
-
-    def _LoadFile(self) -> Dict[bytes, bytes]:
-        if not os.path.exists(self._file_path):
-            return dict()
-
-        with open(self._file_path, 'rb') as fp:
-            entries = fp.readlines()
-
-        m = dict()
-        for entry in entries:
-            if len(entry) == 0:
-                continue
-            domain, encrypted_password = entry.strip().split(b':')
-            m[domain] = encrypted_password
-
-        return m
-
-    def _WriteFile(self, m: Dict[bytes, bytes]) -> None:
-        with open(self._file_path, 'wb') as fp:
-            for domain, encrypted_password in m.items():
-                fp.write(b':'.join([domain, encrypted_password]))
-                fp.write(b'\n')
 
 
 class PasswordManager(object):
@@ -123,7 +87,11 @@ def main():
         InitPasswordManager(args.saltfilepath)
         return
 
-    storage = LocalFileStorage(args.datafilepath)
+    if args.storage_backend == 'datastore':
+        storage = DatastoreStorage(args.datastore_json)
+    else:
+        storage = LocalFileStorage(args.datafilepath)
+    
     pwm = PasswordManager(args.rootkey.encode(),
                           GetSalt(args.saltfilepath), storage)
     if args.command == 'add':
