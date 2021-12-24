@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 # Custom
+gcloud-service-accounts/
 data/
