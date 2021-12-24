@@ -13,7 +13,7 @@ class LocalFileStorage(Storage):
     def Get(self, domain: bytes) -> bytes:
         m = self._LoadFile()
         if domain not in m:
-            raise KeyError('domain {} not found'.format(domain))
+            raise KeyError('domain {} not found'.format(domain.decode()))
         return m[domain]
 
     def Set(self, domain: bytes, encrypted_password: bytes) -> None:

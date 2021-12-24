@@ -19,17 +19,17 @@ def InitArgParser():
                         help='a command to run')
     parser.add_argument('--saltfilepath',
                         default=os.path.join(os.path.dirname(
-                            __file__), 'data/salt'),
+                            __file__), '../data/salt'),
                         help='the path to the salt file')
     parser.add_argument('--storage_backend', choices=[
                         'local', 'bigtable', 'datastore'],  default='local', help='the storage backend')
     parser.add_argument('--datastore_json',
                         default=os.path.join(os.path.dirname(
-                            __file__), 'gcloud-service-accounts/passwordmanager-datastore-admin.json'),
+                            __file__), '../gcloud-service-accounts/passwordmanager-datastore-admin.json'),
                         help='the path to the datastore service account json file')
     parser.add_argument('--datafilepath',
                         default=os.path.join(os.path.dirname(
-                            __file__), 'data/raw_data'),
+                            __file__), '../data/raw_data'),
                         help='the path to the raw data file')
     parser.add_argument(
         '--rootkey', default='not_working_key', help='the root pass key')

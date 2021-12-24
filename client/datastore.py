@@ -14,6 +14,8 @@ class DatastoreStorage(Storage):
     def Get(self, domain: bytes) -> bytes:
         key = self._client.key(self._kind, domain.decode())
         entity = self._client.get(key=key)
+        if entity is None:
+            raise KeyError('domain {} not found'.format(domain.decode()))
         return entity['encrypted_password']
 
     def Set(self, domain: bytes, encrypted_password: bytes) -> None:
