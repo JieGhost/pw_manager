@@ -14,30 +14,60 @@
 
 # [START gae_python38_app]
 # [START gae_python3_app]
-from flask import Flask
+from flask import Flask, request
 
 from storage.datastore import DatastoreStorage
 from storage.storage import Storage
 
+datastore_storage = DatastoreStorage()
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
 app = Flask(__name__)
 
-datastore_storage = DatastoreStorage()
-
 
 @app.route('/')
-def hello():
+def index():
     """Return a friendly HTTP greeting."""
     return 'Hello World!'
 
 
-@app.route('/store')
+@app.route('/store', methods=['POST'])
 def store():
-    """Return a friendly HTTP greeting."""
-    datastore_storage.Set(b'abcde', b'efghi')
-    return 'done!'
+    """Stores the login information."""
+    domain = request.form.get('domain')
+    encrypted_password = request.form.get('encrypted_password')
+
+    if not domain or not encrypted_password:
+        return 'invalid input: <domain: {}; encrypted_password: {}>'.format(domain, encrypted_password), 400
+
+    try:
+        datastore_storage.Set(domain.encode(), encrypted_password.encode())
+        return 'success', 200
+    except Exception as err:
+        return 'fail to store: {}'.format(err), 500
+
+
+@app.route('/retrieve/<domain>')
+def retrieve(domain: str):
+    """Retrieves the requested login information."""
+    try:
+        encrypted_password = datastore_storage.Get(domain.encode())
+        return encrypted_password.decode(), 200
+    except KeyError as err:
+        return '{}'.format(err), 400
+    except Exception as err:
+        return 'fail to retrieve: {}'.format(err), 500
+
+
+@app.route('/list_domains')
+def list_domains():
+    """List all the stored domains."""
+    try:
+        domains = datastore_storage.List()
+        return '\n'.join(domain.decode() for domain in domains), 200
+    except Exception as err:
+        return 'fail to list domains: {}'.format(err), 500
 
 
 if __name__ == '__main__':
