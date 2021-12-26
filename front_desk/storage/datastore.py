@@ -2,13 +2,16 @@ from typing import List
 
 from google.cloud import datastore
 
-from storage import Storage
+from storage.storage import Storage
 
 
 class DatastoreStorage(Storage):
-    def __init__(self, json_path: str) -> None:
+    def __init__(self, json_path: str = None) -> None:
         super().__init__()
-        self._client = datastore.Client.from_service_account_json(json_path)
+        if json_path != None:
+            self._client = datastore.Client.from_service_account_json(json_path)
+        else:
+            self._client = datastore.Client()
         self._kind = 'Entry'
 
     def Get(self, domain: bytes) -> bytes:

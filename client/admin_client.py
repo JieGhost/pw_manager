@@ -7,9 +7,12 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-from datastore import DatastoreStorage
-from localfilestore import LocalFileStorage
-from storage import Storage
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '../front_desk'))
+
+from storage.datastore import DatastoreStorage
+from storage.localfile import LocalFileStorage
+from storage.storage import Storage
 
 
 def InitArgParser():

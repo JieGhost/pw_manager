@@ -16,16 +16,28 @@
 # [START gae_python3_app]
 from flask import Flask
 
+from storage.datastore import DatastoreStorage
+from storage.storage import Storage
+
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
 app = Flask(__name__)
+
+datastore_storage = DatastoreStorage()
 
 
 @app.route('/')
 def hello():
     """Return a friendly HTTP greeting."""
     return 'Hello World!'
+
+
+@app.route('/store')
+def store():
+    """Return a friendly HTTP greeting."""
+    datastore_storage.Set(b'abcde', b'efghi')
+    return 'done!'
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 import os
 from typing import Dict, List
 
-from storage import Storage
+from storage.storage import Storage
 
 
 class LocalFileStorage(Storage):
