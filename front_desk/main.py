@@ -17,7 +17,7 @@
 from flask import Flask, request
 
 from storage.datastore import DatastoreStorage
-from storage.storage import Storage
+from utils.sanity import SanityCheckDomain, SanityCheckEncryptedPassword
 
 datastore_storage = DatastoreStorage()
 
@@ -38,8 +38,11 @@ def store():
     domain = request.form.get('domain')
     encrypted_password = request.form.get('encrypted_password')
 
-    if not domain or not encrypted_password:
-        return 'invalid input: <domain: {}; encrypted_password: {}>'.format(domain, encrypted_password), 400
+    if not SanityCheckDomain(domain):
+        return 'invalid domain: {}'.format(domain), 400
+
+    if not SanityCheckEncryptedPassword(encrypted_password):
+        return 'invalid encrypted password: {}'.format(encrypted_password), 400
 
     try:
         datastore_storage.Set(domain.encode(), encrypted_password.encode())
@@ -65,7 +68,7 @@ def list_domains():
     """List all the stored domains."""
     try:
         domains = datastore_storage.List()
-        return '\n'.join(domain.decode() for domain in domains), 200
+        return ';'.join(domain.decode() for domain in domains), 200
     except Exception as err:
         return 'fail to list domains: {}'.format(err), 500
 
