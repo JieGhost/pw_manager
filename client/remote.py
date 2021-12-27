@@ -1,8 +1,6 @@
 import requests
 from typing import List
 
-from requests import exceptions
-
 from storage import Storage
 
 
