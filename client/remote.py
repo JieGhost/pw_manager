@@ -1,6 +1,8 @@
 import requests
 from typing import List
 
+from requests import exceptions
+
 from storage import Storage
 
 
@@ -13,16 +15,25 @@ class RemoteStorage(Storage):
         self._list_domains_url = '{}/{}'.format(self._remote_server, 'list_domains')
 
     def Get(self, domain: str) -> str:
-        r = requests.get('{}/{}'.format(self._retrieve_url, domain))
-        r.raise_for_status()
-        return r.text
+        try:
+            r = requests.get('{}/{}'.format(self._retrieve_url, domain))
+            r.raise_for_status()
+            return r.text
+        except requests.exceptions.HTTPError as err:
+            raise Exception(r.text) from err
 
     def Set(self, domain: str, encrypted_password: str) -> None:
-        data = {'domain': domain, 'encrypted_password': encrypted_password}
-        r = requests.post(self._store_url, data=data)
-        r.raise_for_status()
+        try:
+            data = {'domain': domain, 'encrypted_password': encrypted_password}
+            r = requests.post(self._store_url, data=data)
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            raise Exception(r.text) from err
 
     def List(self) -> List[str]:
-        r = requests.get(self._list_domains_url)
-        r.raise_for_status()
-        return r.text.strip().split(';')
+        try:
+            r = requests.get(self._list_domains_url)
+            r.raise_for_status()
+            return r.text.strip().split(';')
+        except requests.exceptions.HTTPError as err:
+            raise Exception(r.text) from err
