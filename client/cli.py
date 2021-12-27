@@ -7,12 +7,9 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '../front_desk'))
-
-from storage.datastore import DatastoreStorage
-from storage.localfile import LocalFileStorage
-from storage.storage import Storage
+from localfile import LocalFileStorage
+from remote import RemoteStorage
+from storage import Storage
 
 
 def InitArgParser():
@@ -24,12 +21,10 @@ def InitArgParser():
                         default=os.path.join(os.path.dirname(
                             __file__), '../data/salt'),
                         help='the path to the salt file')
-    parser.add_argument('--storage_backend', choices=[
-                        'local', 'bigtable', 'datastore'],  default='local', help='the storage backend')
-    parser.add_argument('--datastore_json',
-                        default=os.path.join(os.path.dirname(
-                            __file__), '../gcloud-service-accounts/passwordmanager-datastore-admin.json'),
-                        help='the path to the datastore service account json file')
+    parser.add_argument('--local_mode', action='store_true',
+                        help='wether to store the password locally')
+    parser.add_argument('--remote_server', default='https://passwordmanager-335804.uk.r.appspot.com',
+                        help='the address of the remote server')
     parser.add_argument('--datafilepath',
                         default=os.path.join(os.path.dirname(
                             __file__), '../data/raw_data'),
@@ -73,14 +68,14 @@ class PasswordManager(object):
         self._f = Fernet(self._encryption_key)
 
     def RetrievePassword(self, domain: str) -> str:
-        encrypted_password = self._storage.Get(domain.encode())
-        return self._f.decrypt(encrypted_password).decode()
+        encrypted_password = self._storage.Get(domain)
+        return self._f.decrypt(encrypted_password.encode()).decode()
 
     def StorePassword(self, domain: str, password: str) -> None:
-        self._storage.Set(domain.encode(), self._f.encrypt(password.encode()))
+        self._storage.Set(domain, self._f.encrypt(password.encode()).decode())
 
     def ListDomains(self) -> List[str]:
-        return (d.decode() for d in self._storage.List())
+        return self._storage.List()
 
 
 def main():
@@ -90,11 +85,11 @@ def main():
         InitPasswordManager(args.saltfilepath)
         return
 
-    if args.storage_backend == 'datastore':
-        storage = DatastoreStorage(args.datastore_json)
-    else:
+    if args.local_mode:
         storage = LocalFileStorage(args.datafilepath)
-    
+    else:
+        storage = RemoteStorage(args.remote_server)
+
     pwm = PasswordManager(args.rootkey.encode(),
                           GetSalt(args.saltfilepath), storage)
     if args.command == 'add':

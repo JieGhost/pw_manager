@@ -1,7 +1,7 @@
 import os
 from typing import Dict, List
 
-from storage.storage import Storage
+from storage import Storage
 
 
 class LocalFileStorage(Storage):
@@ -10,22 +10,22 @@ class LocalFileStorage(Storage):
         self._file_path = file_path
         self._entries = dict()
 
-    def Get(self, domain: bytes) -> bytes:
+    def Get(self, domain: str) -> bytes:
         m = self._LoadFile()
         if domain not in m:
-            raise KeyError('domain {} not found'.format(domain.decode()))
+            raise KeyError('domain {} not found'.format(domain))
         return m[domain]
 
-    def Set(self, domain: bytes, encrypted_password: bytes) -> None:
+    def Set(self, domain: str, encrypted_password: str) -> None:
         m = self._LoadFile()
         m[domain] = encrypted_password
         self._WriteFile(m)
 
-    def List(self) -> List[bytes]:
+    def List(self) -> List[str]:
         m = self._LoadFile()
         return m.keys()
 
-    def _LoadFile(self) -> Dict[bytes, bytes]:
+    def _LoadFile(self) -> Dict[str, str]:
         if not os.path.exists(self._file_path):
             return dict()
 
@@ -37,12 +37,13 @@ class LocalFileStorage(Storage):
             if len(entry) == 0:
                 continue
             domain, encrypted_password = entry.strip().split(b':')
-            m[domain] = encrypted_password
+            m[domain.decode()] = encrypted_password.decode()
 
         return m
 
-    def _WriteFile(self, m: Dict[bytes, bytes]) -> None:
+    def _WriteFile(self, m: Dict[str, str]) -> None:
         with open(self._file_path, 'wb') as fp:
             for domain, encrypted_password in m.items():
-                fp.write(b':'.join([domain, encrypted_password]))
+                fp.write(
+                    b':'.join([domain.encode(), encrypted_password.encode()]))
                 fp.write(b'\n')
