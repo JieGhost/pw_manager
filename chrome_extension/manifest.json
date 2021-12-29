@@ -1,0 +1,9 @@
+{
+    "manifest_version": 2,
+    "name": "Password Manager Chrome Extension",
+    "description": "The Chrome App for the password manager project.",
+    "version": "0.1",
+    "permissions": [
+      "identity"
+    ]
+  }
