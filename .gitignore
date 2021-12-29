@@ -134,3 +134,4 @@ bazel-*
 # Custom
 gcloud-service-accounts/
 data/
+web/public/scripts

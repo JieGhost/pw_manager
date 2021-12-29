@@ -1,0 +1,21 @@
+{
+  "name": "password-manager-web",
+  "version": "1.0.0",
+  "description": "A web interface for managing your passwords.",
+  "main": "src/password-manager.js",
+  "dependencies": {
+    "firebase": "^9.6.1"
+  },
+  "scripts": {
+    "build": "webpack",
+    "start": "webpack --watch --progress",
+    "visualize-bundle": "webpack --analyze"
+  },
+  "author": "JieGhost",
+  "license": "ISC",
+  "devDependencies": {
+    "webpack": "^5.48.0",
+    "webpack-bundle-analyzer": "^4.4.2",
+    "webpack-cli": "^4.7.2"
+  }
+}
