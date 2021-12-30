@@ -54,7 +54,7 @@ function handleStore(e) {
         var form_data = new FormData();
         form_data.append('domain', domainInputElement.value);
         form_data.append('encrypted_password', passwordInputElement.value);
-        fetch(store_url, { method: 'POST', body: form_data }).then(response => {
+        fetch(store_url, { method: 'POST', body: form_data, mode: 'cors' }).then(response => {
             if (!response.ok) {
                 console.log('store failed');
             } else {
@@ -78,7 +78,7 @@ function handleRetrieve(e) {
 }
 
 function handleList() {
-    fetch(list_url).then(response => {
+    fetch(store_url, { mode: 'cors' }).then(response => {
         if (!response.ok) {
             console.log('list failed');
             console.log(response);
