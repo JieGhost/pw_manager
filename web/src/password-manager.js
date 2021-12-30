@@ -78,7 +78,7 @@ function handleRetrieve(e) {
 }
 
 function handleList() {
-    fetch(store_url, { mode: 'cors' }).then(response => {
+    fetch(list_url, { mode: 'cors' }).then(response => {
         if (!response.ok) {
             console.log('list failed');
             console.log(response);
