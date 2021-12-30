@@ -15,16 +15,21 @@
 # [START gae_python38_app]
 # [START gae_python3_app]
 from flask import Flask, request
+from flask_cors import CORS
 
 from storage.datastore import DatastoreStorage
 from utils.sanity import SanityCheckDomain, SanityCheckEncryptedPassword
+
+trusted_origins = [
+    'https://passwordmanager-335804.firebaseapp.com/',
+]
 
 datastore_storage = DatastoreStorage()
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
 app = Flask(__name__)
-
+CORS(app, origins=trusted_origins, supports_credentials=True)
 
 @app.route('/')
 def index():

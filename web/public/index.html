@@ -26,15 +26,6 @@ limitations under the License.
   <script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
 
   <link rel="stylesheet" href="main.css">
-
-  <!-- Import and configure the Firebase SDK -->
-  <!-- These scripts are made available when the app is served or deployed on Firebase Hosting -->
-  <!-- If you do not serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup -->
-
-  <!-- <script src="/__/firebase/9.6.1/firebase-app-compat.js"></script>
-  <script src="/__/firebase/9.6.1/firebase-auth-compat.js"></script>
-  <script src="/__/firebase/init.js"></script> -->
-
   <script type="module" src="scripts/main.js"></script>
 </head>
 <body>
@@ -58,10 +49,38 @@ limitations under the License.
           <h2 class="mdl-card__title-text">Google Authentication with Popup</h2>
         </div>
         <div class="mdl-card__supporting-text mdl-color-text--grey-600">
-          <p>Sign in with your Google account below.</p>
+          <div id="user-container">
+            <div hidden id="user-pic"></div>
+            <div hidden id="user-name"></div>
+            <button hidden id="sign-out" class="mdl-button mdl-js-button mdl-button--raised">
+              Sign-out
+            </button>
+            <button hidden id="sign-in" class="mdl-button mdl-js-button mdl-button--raised">
+              <i class="material-icons">account_circle</i>Sign-in with Google
+            </button>
+          </div>
 
-          <!-- Button that handles sign-in/sign-out -->
-          <button disabled class="mdl-button mdl-js-button mdl-button--raised" id="quickstart-sign-in">Sign in with Google</button>
+          <form hidden id="login-info-form" action="#">
+            <div>
+              <label for="store-domain">Domain...</label><br>
+              <input type="text" id="store-domain" autocomplete="off"><br>
+              <label for="store-password">Password...</label><br>
+              <input type="text" id="store-password" autocomplete="off"><br>
+            </div>
+            <button id="store-button" type="submit">Store</button>
+          </form>
+
+          <form hidden id="retrieve-form" action="#">
+            <div>
+              <label for="get-domain">Domain...</label><br>
+              <input type="text" id="get-domain" autocomplete="off"><br>
+            </div>
+            <button id="retrieve-button" type="submit">Get</button>
+          </form>
+
+          <button hidden id="list-button">
+            list domains
+          </button>
 
           <!-- Container where we'll display the user details -->
           <div class="quickstart-user-details-container">

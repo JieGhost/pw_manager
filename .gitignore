@@ -135,3 +135,4 @@ bazel-*
 gcloud-service-accounts/
 data/
 web/public/scripts
+.firebase
