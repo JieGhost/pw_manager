@@ -12,9 +12,12 @@ class RemoteStorage(Storage):
         self._store_url = '{}/{}'.format(self._remote_server, 'store')
         self._list_domains_url = '{}/{}'.format(self._remote_server, 'list_domains')
 
+        #TODO: Use a real secret admin token.
+        self._headers = {'Authorization': 'Bearer Admin'}
+
     def Get(self, domain: str) -> str:
         try:
-            r = requests.get('{}/{}'.format(self._retrieve_url, domain))
+            r = requests.get('{}/{}'.format(self._retrieve_url, domain), headers=self._headers)
             r.raise_for_status()
             return r.text
         except requests.exceptions.HTTPError as err:
@@ -23,14 +26,14 @@ class RemoteStorage(Storage):
     def Set(self, domain: str, encrypted_password: str) -> None:
         try:
             data = {'domain': domain, 'encrypted_password': encrypted_password}
-            r = requests.post(self._store_url, data=data)
+            r = requests.post(self._store_url, data=data, headers=self._headers)
             r.raise_for_status()
         except requests.exceptions.HTTPError as err:
             raise Exception(r.text) from err
 
     def List(self) -> List[str]:
         try:
-            r = requests.get(self._list_domains_url)
+            r = requests.get(self._list_domains_url, headers=self._headers)
             r.raise_for_status()
             return r.text.strip().split(';')
         except requests.exceptions.HTTPError as err:
