@@ -54,14 +54,14 @@ function handleStore(e) {
         var form_data = new FormData();
         form_data.append('domain', domainInputElement.value);
         form_data.append('encrypted_password', passwordInputElement.value);
-        fetch(store_url, { method: 'POST', body: form_data, mode: 'cors' }).then(response => {
+        fetch(store_url, { method: 'POST', body: form_data, mode: 'cors', headers: {Authorization: 'Bearer Token'} }).then(response => {
             if (!response.ok) {
                 console.log('store failed');
             } else {
                 console.log('successfully stored...');
             }
-            // domainInputElement.value = '';
-            // passwordInputElement.value = '';
+            domainInputElement.value = '';
+            passwordInputElement.value = '';
             return response.text();
         }).then(response_text => {
             console.log(response_text);
@@ -78,7 +78,7 @@ function handleRetrieve(e) {
 }
 
 function handleList() {
-    fetch(list_url, { mode: 'cors' }).then(response => {
+    fetch(list_url, { mode: 'cors', headers: {Authorization: 'Bearer Token'} }).then(response => {
         if (!response.ok) {
             console.log('list failed');
             console.log(response);
@@ -92,7 +92,11 @@ function handleList() {
 }
 
 async function getToken() {
-    document.getElementById('quickstart-oauthtoken').textContent = await getIdToken(getAuth().currentUser);
+    var idToken = await getIdToken(getAuth().currentUser);
+    console.log(`the token type: ${typeof idToken}`);
+    document.cookie = 'token=' + idToken + '; SameSite=None; domain=127.0.0.1:8080; path=/; Secure';
+    console.log(document.cookie);
+    document.getElementById('quickstart-oauthtoken').textContent = idToken;
 }
 
 function initApp() {

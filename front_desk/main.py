@@ -18,6 +18,7 @@ from flask import Flask, request
 from flask_cors import CORS
 
 from storage.datastore import DatastoreStorage
+from utils.auth import VerifyAndParseToken
 from utils.sanity import SanityCheckDomain, SanityCheckEncryptedPassword
 
 trusted_origins = [
@@ -31,7 +32,7 @@ datastore_storage = DatastoreStorage()
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
 app = Flask(__name__)
-CORS(app, origins=trusted_origins, supports_credentials=True)
+CORS(app, origins=trusted_origins)
 
 @app.route('/')
 def index():
@@ -42,6 +43,11 @@ def index():
 @app.route('/store', methods=['POST'])
 def store():
     """Stores the login information."""
+    try:
+        id_token = VerifyAndParseToken(request.headers)
+    except Exception as err:
+        return 'fail to authenticate: {}'.format(err), 401
+
     domain = request.form.get('domain')
     encrypted_password = request.form.get('encrypted_password')
 
@@ -62,6 +68,11 @@ def store():
 def retrieve(domain: str):
     """Retrieves the requested login information."""
     try:
+        id_token = VerifyAndParseToken(request.headers)
+    except Exception as err:
+        return 'fail to authenticate: {}'.format(err), 401
+
+    try:
         encrypted_password = datastore_storage.Get(domain.encode())
         return encrypted_password.decode(), 200
     except KeyError as err:
@@ -73,6 +84,11 @@ def retrieve(domain: str):
 @app.route('/list_domains')
 def list_domains():
     """List all the stored domains."""
+    try:
+        id_token = VerifyAndParseToken(request.headers)
+    except Exception as err:
+        return 'fail to authenticate: {}'.format(err), 401
+
     try:
         domains = datastore_storage.List()
         return ';'.join(domain.decode() for domain in domains), 200
