@@ -22,6 +22,8 @@ from utils.sanity import SanityCheckDomain, SanityCheckEncryptedPassword
 
 trusted_origins = [
     'https://passwordmanager-335804.firebaseapp.com.*',
+    # TODO: remove after dev.
+    'http://localhost:[0-9]+',
 ]
 
 datastore_storage = DatastoreStorage()
