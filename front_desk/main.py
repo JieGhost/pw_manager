@@ -18,7 +18,7 @@ from flask import Flask, request
 from flask_cors import CORS
 
 from storage.datastore import DatastoreStorage
-from utils.auth import VerifyAndParseToken
+from utils.auth import AuthManager
 from utils.sanity import SanityCheckDomain, SanityCheckEncryptedPassword
 
 trusted_origins = [
@@ -27,7 +27,10 @@ trusted_origins = [
     'http://localhost:[0-9]+',
 ]
 
+gcp_project_id = 'passwordmanager-335804'
+
 datastore_storage = DatastoreStorage()
+auth_manager = AuthManager(gcp_project_id)
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
@@ -44,7 +47,7 @@ def index():
 def store():
     """Stores the login information."""
     try:
-        id_token = VerifyAndParseToken(request.headers)
+        auth_id = auth_manager.ExtractAndVerifyToken(request.headers)
     except Exception as err:
         return 'fail to authenticate: {}'.format(err), 401
 
@@ -68,7 +71,7 @@ def store():
 def retrieve(domain: str):
     """Retrieves the requested login information."""
     try:
-        id_token = VerifyAndParseToken(request.headers)
+        auth_id = auth_manager.ExtractAndVerifyToken(request.headers)
     except Exception as err:
         return 'fail to authenticate: {}'.format(err), 401
 
@@ -85,7 +88,7 @@ def retrieve(domain: str):
 def list_domains():
     """List all the stored domains."""
     try:
-        id_token = VerifyAndParseToken(request.headers)
+        auth_id = auth_manager.ExtractAndVerifyToken(request.headers)
     except Exception as err:
         return 'fail to authenticate: {}'.format(err), 401
 

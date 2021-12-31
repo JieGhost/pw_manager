@@ -2,9 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, getIdToken } from "firebase/auth";
 import { getFirebaseConfig } from './firebase-config.js';
 
-var store_url = 'https://passwordmanager-335804.uk.r.appspot.com/store';
-var retrieve_url = 'https://passwordmanager-335804.uk.r.appspot.com/retrieve';
-var list_url = 'https://passwordmanager-335804.uk.r.appspot.com/list_domains';
+// var base_url = 'https://passwordmanager-335804.uk.r.appspot.com/';
+var base_url = 'http://127.0.0.1:8080/'
+
+var store_url = base_url + 'store';
+var retrieve_url = base_url + 'retrieve';
+var list_url = base_url + 'list_domains';
 
 // Adds a size to Google Profile pics URLs.
 function addSizeToGoogleProfilePic(url) {
@@ -45,7 +48,7 @@ function handleSignOut() {
     }
 }
 
-function handleStore(e) {
+async function handleStore(e) {
     // TODO:
     // 1. encrypt password
     // 2. disable form and button while waiting for the response.
@@ -54,7 +57,15 @@ function handleStore(e) {
         var form_data = new FormData();
         form_data.append('domain', domainInputElement.value);
         form_data.append('encrypted_password', passwordInputElement.value);
-        fetch(store_url, { method: 'POST', body: form_data, mode: 'cors', headers: {Authorization: 'Bearer Token'} }).then(response => {
+        var idToken = await getIdToken(getAuth().currentUser);
+        fetch(store_url, {
+            method: 'POST',
+            body: form_data,
+            mode: 'cors',
+            headers: {
+                Authorization: 'Bearer ' + idToken
+            }
+        }).then(response => {
             if (!response.ok) {
                 console.log('store failed');
             } else {
@@ -77,8 +88,9 @@ function handleRetrieve(e) {
     e.preventDefault();
 }
 
-function handleList() {
-    fetch(list_url, { mode: 'cors', headers: {Authorization: 'Bearer Token'} }).then(response => {
+async function handleList() {
+    var idToken = await getIdToken(getAuth().currentUser);
+    fetch(list_url, { mode: 'cors', headers: { Authorization: 'Bearer ' + idToken } }).then(response => {
         if (!response.ok) {
             console.log('list failed');
             console.log(response);
@@ -91,13 +103,13 @@ function handleList() {
     }).catch(err => { console.error(err); });
 }
 
-async function getToken() {
-    var idToken = await getIdToken(getAuth().currentUser);
-    console.log(`the token type: ${typeof idToken}`);
-    document.cookie = 'token=' + idToken + '; SameSite=None; domain=127.0.0.1:8080; path=/; Secure';
-    console.log(document.cookie);
-    document.getElementById('quickstart-oauthtoken').textContent = idToken;
-}
+// async function getToken() {
+//     var idToken = await getIdToken(getAuth().currentUser);
+//     console.log(`the token type: ${typeof idToken}`);
+//     document.cookie = 'token=' + idToken + '; SameSite=None; domain=127.0.0.1:8080; path=/; Secure';
+//     console.log(document.cookie);
+//     document.getElementById('quickstart-oauthtoken').textContent = idToken;
+// }
 
 function initApp() {
     // Listening for auth state changes.
@@ -126,8 +138,6 @@ function initApp() {
             // User is signed in.
             document.getElementById('quickstart-sign-in-status').textContent = 'Signed in';
             document.getElementById('quickstart-account-details').textContent = JSON.stringify(user, null, '  ');
-            getToken();
-            // user.getIdToken().then((id_token) => { document.getElementById('quickstart-oauthtoken').textContent = id_token; });
         } else {
             // Hide user's profile and sign-out button.
             userNameElement.setAttribute('hidden', 'true');
