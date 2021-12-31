@@ -25,6 +25,10 @@ def InitArgParser():
                         help='wether to store the password locally')
     parser.add_argument('--remote_server', default='https://passwordmanager-335804.uk.r.appspot.com',
                         help='the address of the remote server')
+    parser.add_argument('--firebase_id_token_file',
+                        default=os.path.join(os.path.dirname(
+                            __file__), '../data/firebase_id_token'),
+                        help='the path to the firebase id token file')
     parser.add_argument('--datafilepath',
                         default=os.path.join(os.path.dirname(
                             __file__), '../data/raw_data'),
@@ -33,6 +37,7 @@ def InitArgParser():
         '--rootkey', default='not_working_key', help='the root pass key')
     parser.add_argument(
         '--domain', help='the domain where the password is associated with')
+    parser.add_argument('--username', help='the username to be stored')
     parser.add_argument('--password', help='the password to be stored')
     return parser
 
@@ -67,12 +72,13 @@ class PasswordManager(object):
             kdf.derive(self._root_key))
         self._f = Fernet(self._encryption_key)
 
-    def RetrievePassword(self, domain: str) -> str:
-        encrypted_password = self._storage.Get(domain)
-        return self._f.decrypt(encrypted_password.encode()).decode()
+    def RetrieveLogin(self, domain: str) -> str:
+        username, encrypted_password = self._storage.Get(domain)
+        return username, self._f.decrypt(encrypted_password.encode()).decode()
 
-    def StorePassword(self, domain: str, password: str) -> None:
-        self._storage.Set(domain, self._f.encrypt(password.encode()).decode())
+    def StoreLogin(self, domain: str, username: str, password: str) -> None:
+        self._storage.Set(domain, username, self._f.encrypt(
+            password.encode()).decode())
 
     def ListDomains(self) -> List[str]:
         return self._storage.List()
@@ -88,14 +94,16 @@ def main():
     if args.local_mode:
         storage = LocalFileStorage(args.datafilepath)
     else:
-        storage = RemoteStorage(args.remote_server)
+        with open(args.firebase_id_token_file, 'r') as fp:
+            firebase_id_token = fp.read()
+        storage = RemoteStorage(args.remote_server, firebase_id_token)
 
     pwm = PasswordManager(args.rootkey.encode(),
                           GetSalt(args.saltfilepath), storage)
     if args.command == 'add':
-        pwm.StorePassword(args.domain, args.password)
+        pwm.StoreLogin(args.domain, args.username, args.password)
     elif args.command == 'get':
-        print(pwm.RetrievePassword(args.domain))
+        print(pwm.RetrieveLogin(args.domain))
     elif args.command == 'list':
         print('\n'.join(pwm.ListDomains()))
 

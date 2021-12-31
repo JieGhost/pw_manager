@@ -2,8 +2,8 @@ import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, getIdToken } from "firebase/auth";
 import { getFirebaseConfig } from './firebase-config.js';
 
-// var base_url = 'https://passwordmanager-335804.uk.r.appspot.com/';
-var base_url = 'http://127.0.0.1:8080/'
+var base_url = 'https://passwordmanager-335804.uk.r.appspot.com/';
+// var base_url = 'http://127.0.0.1:8080/'
 
 var store_url = base_url + 'store';
 var retrieve_url = base_url + 'retrieve';
@@ -106,13 +106,11 @@ async function handleList() {
     }).catch(err => { console.error(err); });
 }
 
-// async function getToken() {
-//     var idToken = await getIdToken(getAuth().currentUser);
-//     console.log(`the token type: ${typeof idToken}`);
-//     document.cookie = 'token=' + idToken + '; SameSite=None; domain=127.0.0.1:8080; path=/; Secure';
-//     console.log(document.cookie);
-//     document.getElementById('quickstart-oauthtoken').textContent = idToken;
-// }
+async function logToken() {
+    var idToken = await getIdToken(getAuth().currentUser);
+    console.log(`the id token type: ${typeof idToken}`);
+    console.log(`the id token: ${idToken}`);
+}
 
 function initApp() {
     // Listening for auth state changes.
@@ -141,6 +139,8 @@ function initApp() {
             // User is signed in.
             document.getElementById('quickstart-sign-in-status').textContent = 'Signed in';
             document.getElementById('quickstart-account-details').textContent = JSON.stringify(user, null, '  ');
+
+            logToken();
         } else {
             // Hide user's profile and sign-out button.
             userNameElement.setAttribute('hidden', 'true');
