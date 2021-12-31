@@ -2,6 +2,7 @@ from typing import List
 
 from google.cloud import datastore
 
+from storage.model import LoginModel, UserModel
 from storage.storage import Storage
 
 
@@ -9,29 +10,44 @@ class DatastoreStorage(Storage):
     def __init__(self, json_path: str = None) -> None:
         super().__init__()
         if json_path != None:
-            self._client = datastore.Client.from_service_account_json(json_path)
+            self._client = datastore.Client.from_service_account_json(
+                json_path)
         else:
             self._client = datastore.Client()
-        self._kind = 'Entry'
+        self._user_kind = 'User'
+        self._login_kind = 'Login'
 
-    def Get(self, domain: bytes) -> bytes:
-        key = self._client.key(self._kind, domain.decode())
-        entity = self._client.get(key=key)
-        if entity is None:
+    def Set(self, user: UserModel, login: LoginModel) -> None:
+        user_key = self._client.key(self._user_kind, user.id)
+        if self._client.get(key=user_key) == None:
+            user_entry = datastore.Entity(key=user_key)
+            user_entry['email'] = user.email
+            self._client.put(user_entry)
+
+        login_key = self._client.key(
+            self._login_kind, login.domain, parent=user_key)
+        login_entry = datastore.Entity(key=login_key)
+        login_entry['domain'] = login.domain
+        login_entry['username'] = login.username
+        login_entry['encrypted_password'] = login.encrypted_password
+        self._client.put(login_entry)
+
+    def Get(self, user_id: str, domain: str) -> LoginModel:
+        user_key = self._client.key(self._user_kind, user_id)
+        login_key = self._client.key(self._login_kind, domain, parent=user_key)
+        login_entry = self._client.get(key=login_key)
+        if login_entry is None:
             raise KeyError('domain {} not found'.format(domain.decode()))
-        return entity['encrypted_password']
+        login = LoginModel(domain=login_entry['domain'],
+                           username=login_entry['username'],
+                           encrypted_password=login_entry['encrypted_password'])
+        return login
 
-    def Set(self, domain: bytes, encrypted_password: bytes) -> None:
-        key = self._client.key(self._kind, domain.decode())
-        entry = datastore.Entity(key=key)
-        entry['domain'] = domain
-        entry['encrypted_password'] = encrypted_password
-        self._client.put(entry)
-
-    def List(self) -> List[bytes]:
+    def List(self, user_id: str) -> List[str]:
         domains = list()
-        query = self._client.query(kind=self._kind)
+        user_key = self._client.key(self._user_kind, user_id)
+        query = self._client.query(kind=self._login_kind, ancestor=user_key)
         query_iter = query.fetch()
-        for entity in query_iter:
-            domains.append(entity['domain'])
+        for entry in query_iter:
+            domains.append(entry['domain'])
         return domains

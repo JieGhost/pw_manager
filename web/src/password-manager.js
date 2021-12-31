@@ -53,9 +53,10 @@ async function handleStore(e) {
     // 1. encrypt password
     // 2. disable form and button while waiting for the response.
     e.preventDefault();
-    if (domainInputElement.value && passwordInputElement.value) {
+    if (domainInputElement.value && usernameInputElement.value && passwordInputElement.value) {
         var form_data = new FormData();
         form_data.append('domain', domainInputElement.value);
+        form_data.append('username', usernameInputElement.value);
         form_data.append('encrypted_password', passwordInputElement.value);
         var idToken = await getIdToken(getAuth().currentUser);
         fetch(store_url, {
@@ -72,6 +73,7 @@ async function handleStore(e) {
                 console.log('successfully stored...');
             }
             domainInputElement.value = '';
+            usernameInputElement.value = ''
             passwordInputElement.value = '';
             return response.text();
         }).then(response_text => {
@@ -80,6 +82,7 @@ async function handleStore(e) {
     } else {
         console.log('missing input...');
         domainInputElement.value = '';
+        usernameInputElement.value = ''
         passwordInputElement.value = '';
     }
 }
@@ -167,6 +170,7 @@ var signOutButtonElement = document.getElementById('sign-out');
 
 var loginInfoFormElement = document.getElementById('login-info-form');
 var domainInputElement = document.getElementById('store-domain');
+var usernameInputElement = document.getElementById('store-username');
 var passwordInputElement = document.getElementById('store-password');
 
 var retrieveFormElement = document.getElementById('retrieve-form');

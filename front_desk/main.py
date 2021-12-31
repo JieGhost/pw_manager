@@ -18,6 +18,7 @@ from flask import Flask, request
 from flask_cors import CORS
 
 from storage.datastore import DatastoreStorage
+from storage.model import LoginModel, UserModel
 from utils.auth import AuthManager
 from utils.sanity import SanityCheckDomain, SanityCheckEncryptedPassword
 
@@ -37,6 +38,7 @@ auth_manager = AuthManager(gcp_project_id)
 app = Flask(__name__)
 CORS(app, origins=trusted_origins)
 
+
 @app.route('/')
 def index():
     """Return a friendly HTTP greeting."""
@@ -47,11 +49,12 @@ def index():
 def store():
     """Stores the login information."""
     try:
-        auth_id = auth_manager.ExtractAndVerifyToken(request.headers)
+        auth_obj = auth_manager.ExtractAndVerifyToken(request.headers)
     except Exception as err:
         return 'fail to authenticate: {}'.format(err), 401
 
     domain = request.form.get('domain')
+    username = request.form.get('username')
     encrypted_password = request.form.get('encrypted_password')
 
     if not SanityCheckDomain(domain):
@@ -61,7 +64,10 @@ def store():
         return 'invalid encrypted password: {}'.format(encrypted_password), 400
 
     try:
-        datastore_storage.Set(domain.encode(), encrypted_password.encode())
+        user = UserModel(id=auth_obj['user_id'], email=auth_obj['email'])
+        login = LoginModel(domain=domain, username=username,
+                           encrypted_password=encrypted_password.encode())
+        datastore_storage.Set(user, login)
         return 'success', 200
     except Exception as err:
         return 'fail to store: {}'.format(err), 500
@@ -71,13 +77,13 @@ def store():
 def retrieve(domain: str):
     """Retrieves the requested login information."""
     try:
-        auth_id = auth_manager.ExtractAndVerifyToken(request.headers)
+        auth_obj = auth_manager.ExtractAndVerifyToken(request.headers)
     except Exception as err:
         return 'fail to authenticate: {}'.format(err), 401
 
     try:
-        encrypted_password = datastore_storage.Get(domain.encode())
-        return encrypted_password.decode(), 200
+        login = datastore_storage.Get(auth_obj['user_id'],  domain)
+        return '{};{}'.format(login.username, login.encrypted_password.decode()), 200
     except KeyError as err:
         return '{}'.format(err), 400
     except Exception as err:
@@ -88,13 +94,13 @@ def retrieve(domain: str):
 def list_domains():
     """List all the stored domains."""
     try:
-        auth_id = auth_manager.ExtractAndVerifyToken(request.headers)
+        auth_obj = auth_manager.ExtractAndVerifyToken(request.headers)
     except Exception as err:
         return 'fail to authenticate: {}'.format(err), 401
 
     try:
-        domains = datastore_storage.List()
-        return ';'.join(domain.decode() for domain in domains), 200
+        domains = datastore_storage.List(auth_obj['user_id'])
+        return ';'.join(domain for domain in domains), 200
     except Exception as err:
         return 'fail to list domains: {}'.format(err), 500
 
