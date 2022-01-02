@@ -112,79 +112,125 @@ async function logToken() {
     console.log(`the id token: ${idToken}`);
 }
 
+function handleSidebarCollapse() {
+    sidebarElement.classList.toggle('active');
+}
+
+function handleDomainsButton(e) {
+    e.preventDefault();
+    domainsListElement.removeAttribute('hidden');
+    inputFormElement.setAttribute('hidden', true);
+    // TODO: check if store password is done and only send RPC if it is.
+    // handleList should modify domainsListElement.
+    handleList();
+}
+
+function handleStorePasswordButton(e) {
+    e.preventDefault();
+    domainsListElement.setAttribute('hidden', true);
+    inputFormElement.removeAttribute('hidden');
+}
+
 function initApp() {
     // Listening for auth state changes.
     onAuthStateChanged(getAuth(), (user) => {
         if (user) {
+            console.log('user id: ' + user.uid);
             var profilePicUrl = (user.photoURL || '/profile_placeholder.png');
             var displayName = user.displayName;
 
-            // Set the user's profile pic and name.
-            userPicElement.style.backgroundImage = 'url(' + addSizeToGoogleProfilePic(profilePicUrl) + ')';
-            userNameElement.textContent = displayName;
+            // // Set the user's profile pic and name.
+            // userPicElement.style.backgroundImage = 'url(' + addSizeToGoogleProfilePic(profilePicUrl) + ')';
+            // userNameElement.textContent = displayName;
 
-            // Show user's profile and sign-out button.
-            userNameElement.removeAttribute('hidden');
-            userPicElement.removeAttribute('hidden');
-            signOutButtonElement.removeAttribute('hidden');
+            // // Show user's profile and sign-out button.
+            // userNameElement.removeAttribute('hidden');
+            // userPicElement.removeAttribute('hidden');
+            // signOutButtonElement.removeAttribute('hidden');
 
             // Hide sign-in button.
-            signInButtonElement.setAttribute('hidden', 'true');
+            signInItemElement.setAttribute('hidden', 'true');
 
-            // Show
-            loginInfoFormElement.removeAttribute('hidden');
-            retrieveFormElement.removeAttribute('hidden');
-            listButtonElement.removeAttribute('hidden');
-
-            // User is signed in.
-            document.getElementById('quickstart-sign-in-status').textContent = 'Signed in';
-            document.getElementById('quickstart-account-details').textContent = JSON.stringify(user, null, '  ');
+            // Show buttons
+            domainsItemElement.removeAttribute('hidden');
+            storePasswordItemElement.removeAttribute('hidden');
+            supportItemElement.removeAttribute('hidden');
+            signOutItemElement.removeAttribute('hidden');
 
             logToken();
+
+            handleList();
         } else {
-            // Hide user's profile and sign-out button.
-            userNameElement.setAttribute('hidden', 'true');
-            userPicElement.setAttribute('hidden', 'true');
-            signOutButtonElement.setAttribute('hidden', 'true');
+            // // Hide user's profile and sign-out button.
+            // userNameElement.setAttribute('hidden', 'true');
+            // userPicElement.setAttribute('hidden', 'true');
+            // signOutButtonElement.setAttribute('hidden', 'true');
 
             // Show sign-in button.
-            signInButtonElement.removeAttribute('hidden');
+            signInItemElement.removeAttribute('hidden');
 
-            // Hide
-            loginInfoFormElement.setAttribute('hidden', 'true');
-            retrieveFormElement.setAttribute('hidden', 'true');
-            listButtonElement.setAttribute('hidden', 'true');
-
-            // User is signed out.
-            document.getElementById('quickstart-sign-in-status').textContent = 'Signed out';
-            document.getElementById('quickstart-account-details').textContent = 'null';
-            document.getElementById('quickstart-oauthtoken').textContent = 'null';
+            // Hide buttons.
+            domainsItemElement.setAttribute('hidden', 'true');
+            storePasswordItemElement.setAttribute('hidden', 'true');
+            supportItemElement.setAttribute('hidden', 'true');
+            signOutItemElement.setAttribute('hidden', 'true');
         }
     });
 }
 
-var userPicElement = document.getElementById('user-pic');
-var userNameElement = document.getElementById('user-name');
-var signInButtonElement = document.getElementById('sign-in');
-var signOutButtonElement = document.getElementById('sign-out');
+// -------------------------------------------------------------------------------
 
-var loginInfoFormElement = document.getElementById('login-info-form');
-var domainInputElement = document.getElementById('store-domain');
-var usernameInputElement = document.getElementById('store-username');
-var passwordInputElement = document.getElementById('store-password');
+// Declare html tag elements.
+var sidebarCollapseButtonElement = document.getElementById('sidebar-collapse');
+var sidebarElement = document.getElementById('sidebar');
 
-var retrieveFormElement = document.getElementById('retrieve-form');
-var retrieveInfoElement = document.getElementById('get-domain');
+var signInItemElement = document.getElementById('sign-in-item');
+var signInButtonElement = document.getElementById('sign-in-button');
+var domainsItemElement = document.getElementById('domains-item');
+var domainsButtonElement = document.getElementById('domains-button');
+var storePasswordItemElement = document.getElementById('store-password-item');
+var storePasswordButtonElement = document.getElementById('store-password-button');
+var supportItemElement = document.getElementById('support-item');
+var supportButtonElement = document.getElementById('support-button');
+var signOutItemElement = document.getElementById('sign-out-item');
+var signOutButtonElement = document.getElementById('sign-out-button');
 
-var listButtonElement = document.getElementById('list-button')
+var domainsListElement = document.getElementById('domains-list');
+
+var inputFormElement = document.getElementById('input-form');
+var domainInputElement = document.getElementById('input-domain');
+var usernameInputElement = document.getElementById('input-username');
+var passwordInputElement = document.getElementById('input-password');
+
+// -------------------------------------------------------------------------------
+
+// Register event listners
+sidebarCollapseButtonElement.addEventListener('click', handleSidebarCollapse, false);
 
 signInButtonElement.addEventListener('click', handleSignIn, false);
 signOutButtonElement.addEventListener('click', handleSignOut, false);
 
-loginInfoFormElement.addEventListener('submit', handleStore, false);
-retrieveFormElement.addEventListener('submit', handleRetrieve, false);
+domainsButtonElement.addEventListener('click', handleDomainsButton, false);
+storePasswordButtonElement.addEventListener('click', handleStorePasswordButton, false);
 
-listButtonElement.addEventListener('click', handleList, false);
+inputFormElement.addEventListener('submit', handleStore, false);
+
+// -------------------------------------------------------------------------------
+
+// // Declare old elements
+
+
+
+// var retrieveFormElement = document.getElementById('retrieve-form');
+// var retrieveInfoElement = document.getElementById('get-domain');
+
+// var listButtonElement = document.getElementById('list-button')
+
+// //
+// retrieveFormElement.addEventListener('submit', handleRetrieve, false);
+// listButtonElement.addEventListener('click', handleList, false);
+
+// -------------------------------------------------------------------------------
 
 // Initialize Firebase App
 const firebaseApp = initializeApp(getFirebaseConfig());
