@@ -17,7 +17,8 @@ function addSizeToGoogleProfilePic(url) {
     return url;
 }
 
-function handleSignIn() {
+function handleSignIn(e) {
+    e.preventDefault();
     if (!getAuth().currentUser) {
         const provider = new GoogleAuthProvider();
         // provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
@@ -42,7 +43,8 @@ function handleSignIn() {
     }
 }
 
-function handleSignOut() {
+function handleSignOut(e) {
+    e.preventDefault();
     if (getAuth().currentUser) {
         signOut(getAuth());
     }
@@ -70,6 +72,7 @@ async function handleStore(e) {
             if (!response.ok) {
                 console.log('store failed');
             } else {
+                needFetchDomains = true;
                 console.log('successfully stored...');
             }
             domainInputElement.value = '';
@@ -91,8 +94,9 @@ function handleRetrieve(e) {
     e.preventDefault();
 }
 
-async function handleList() {
+async function fetchDomainsList() {
     var idToken = await getIdToken(getAuth().currentUser);
+    logToken(idToken);
     fetch(list_url, { mode: 'cors', headers: { Authorization: 'Bearer ' + idToken } }).then(response => {
         if (!response.ok) {
             console.log('list failed');
@@ -102,12 +106,32 @@ async function handleList() {
         }
         return response.text();
     }).then(response_text => {
-        console.log(response_text);
+        presentDomains(response_text);
+        needFetchDomains = false;
     }).catch(err => { console.error(err); });
 }
 
-async function logToken() {
-    var idToken = await getIdToken(getAuth().currentUser);
+function presentDomains(domainsStr) {
+    var domainsArray = domainsStr.split(';');
+    // Clear old content.
+    clearDomains();
+    // List new content.
+    domainsArray.forEach(domain => {
+        var li = document.createElement("li");
+        var a = document.createElement("button");
+        a.textContent = domain;
+        li.appendChild(a);
+        domainsListElement.appendChild(li);
+    });
+}
+
+function clearDomains() {
+    while (domainsListElement.firstChild) {
+        domainsListElement.removeChild(domainsListElement.lastChild);
+    }
+}
+
+function logToken(idToken) {
     console.log(`the id token type: ${typeof idToken}`);
     console.log(`the id token: ${idToken}`);
 }
@@ -120,15 +144,21 @@ function handleDomainsButton(e) {
     e.preventDefault();
     domainsListElement.removeAttribute('hidden');
     inputFormElement.setAttribute('hidden', true);
-    // TODO: check if store password is done and only send RPC if it is.
-    // handleList should modify domainsListElement.
-    handleList();
+    if (!needFetchDomains) {
+        return;
+    }
+
+    fetchDomainsList();
 }
 
 function handleStorePasswordButton(e) {
     e.preventDefault();
     domainsListElement.setAttribute('hidden', true);
     inputFormElement.removeAttribute('hidden');
+}
+
+function handleSupportButton(e) {
+    e.preventDefault();
 }
 
 function initApp() {
@@ -147,6 +177,7 @@ function initApp() {
             // userNameElement.removeAttribute('hidden');
             // userPicElement.removeAttribute('hidden');
             // signOutButtonElement.removeAttribute('hidden');
+            usernameElement.textContent = user.displayName;
 
             // Hide sign-in button.
             signInItemElement.setAttribute('hidden', 'true');
@@ -157,14 +188,15 @@ function initApp() {
             supportItemElement.removeAttribute('hidden');
             signOutItemElement.removeAttribute('hidden');
 
-            logToken();
-
-            handleList();
+            domainsListElement.removeAttribute('hidden');
+            inputFormElement.setAttribute('hidden', true);
+            fetchDomainsList();
         } else {
             // // Hide user's profile and sign-out button.
             // userNameElement.setAttribute('hidden', 'true');
             // userPicElement.setAttribute('hidden', 'true');
             // signOutButtonElement.setAttribute('hidden', 'true');
+            usernameElement.textContent = 'Not Signed in';
 
             // Show sign-in button.
             signInItemElement.removeAttribute('hidden');
@@ -174,15 +206,24 @@ function initApp() {
             storePasswordItemElement.setAttribute('hidden', 'true');
             supportItemElement.setAttribute('hidden', 'true');
             signOutItemElement.setAttribute('hidden', 'true');
+
+            domainsListElement.setAttribute('hidden', true);
+            inputFormElement.setAttribute('hidden', true);
+            clearDomains();
         }
     });
 }
 
 // -------------------------------------------------------------------------------
 
+// Declare module-level variables.
+var needFetchDomains = false;
+
 // Declare html tag elements.
 var sidebarCollapseButtonElement = document.getElementById('sidebar-collapse');
 var sidebarElement = document.getElementById('sidebar');
+
+var usernameElement = document.getElementById('username');
 
 var signInItemElement = document.getElementById('sign-in-item');
 var signInButtonElement = document.getElementById('sign-in-button');
@@ -213,6 +254,8 @@ signOutButtonElement.addEventListener('click', handleSignOut, false);
 domainsButtonElement.addEventListener('click', handleDomainsButton, false);
 storePasswordButtonElement.addEventListener('click', handleStorePasswordButton, false);
 
+supportButtonElement.addEventListener('click', handleSupportButton, false);
+
 inputFormElement.addEventListener('submit', handleStore, false);
 
 // -------------------------------------------------------------------------------
@@ -228,7 +271,6 @@ inputFormElement.addEventListener('submit', handleStore, false);
 
 // //
 // retrieveFormElement.addEventListener('submit', handleRetrieve, false);
-// listButtonElement.addEventListener('click', handleList, false);
 
 // -------------------------------------------------------------------------------
 

@@ -17,66 +17,114 @@ limitations under the License.
 <html>
 
 <head>
-  <title>Password Bank</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Bank</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
 
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-  <link rel="stylesheet" href="css/style.css">
-  <script type="module" src="scripts/main.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="module" src="scripts/main.js"></script>
 </head>
 
 <body>
-  <div class="wrapper d-flex align-items-stretch">
-      <nav id="sidebar">
-          <div class="custom-menu">
-              <button type="button" id="sidebar-collapse" class="btn btn-primary">
-              </button>
-          </div>
-          <div class="img bg-wrap text-center py-4" style="background-image: url(images/bg_1.jpg);">
-              <div class="user-logo">
-                  <div id='profile-pic' class="img" style="background-image: url(images/logo.jpg);"></div>
-                  <h3 id='user-name'>Not Signed in</h3>
-              </div>
-          </div>
-          <ul class="list-unstyled components mb-5">
-              <li id='sign-in-item' class="active">
-                  <a id='sign-in-button' href="#"><span class="fa fa-sign-in mr-3"></span>Sign In</a>
-              </li>
-              <li hidden id='domains-item' class="active">
-                  <a id='domains-button' href="#"><span class="fa fa-globe mr-3"></span>Domains</a>
-              </li>
-              <li hidden id='store-password-item' class="active">
-                  <a id='store-password-button' href="#"><span class="fa fa-key mr-3"></span>Store Password</a>
-              </li>
-              <li hidden id='support-item' class="active">
-                  <a id='support-button' href="#"><span class="fa fa-support mr-3"></span>Support</a>
-              </li>
-              <li hidden id='sign-out-item' class="active">
-                  <a id='sign-out-button' href="#"><span class="fa fa-sign-out mr-3"></span>Sign Out</a>
-              </li>
-          </ul>
-      </nav>
-
-      <!-- Page Content  -->
-      <div id="content" class="p-4 p-md-5 pt-5">
-          <h2 class="mb-4">Password Bank</h2>
-          <ul hidden id='domains-list'></ul>
-          <form hidden id="input-form" action="#">
-            <div>
-              <label for="input-domain">Domain...</label><br>
-              <input type="text" id="input-domain" autocomplete="off"><br>
-              <label for="input-username">Username...</label><br>
-              <input type="text" id="input-username" autocomplete="off"><br>
-              <label for="input-password">Password...</label><br>
-              <input type="text" id="input-password" autocomplete="off"><br>
+    <div class="wrapper d-flex align-items-stretch">
+        <nav id="sidebar">
+            <div class="custom-menu">
+                <button type="button" id="sidebar-collapse" class="btn btn-primary">
+                </button>
             </div>
-            <button id="input-button" type="submit">Store</button>
-          </form>
-      </div>
-  </div>
+            <div class="img bg-wrap text-center py-4" style="background-image: url(images/bg_1.jpg);">
+                <div class="user-logo">
+                    <div id='profile-pic' class="img" style="background-image: url(images/profile_placeholder.png);">
+                    </div>
+                    <h3 id='username'>Not Signed in</h3>
+                </div>
+            </div>
+            <ul class="list-unstyled components mb-5">
+                <li id='sign-in-item' class="active">
+                    <a id='sign-in-button' href='/'><span class="fa fa-sign-in mr-3"></span>Sign In</a>
+                </li>
+                <li hidden id='domains-item' class="active">
+                    <a id='domains-button' href='/'><span class="fa fa-globe mr-3"></span>Domains</a>
+                </li>
+                <li hidden id='store-password-item' class="active">
+                    <a id='store-password-button' href='/'><span class="fa fa-key mr-3"></span>Store Password</a>
+                </li>
+                <li hidden id='support-item' class="active">
+                    <a id='support-button' href='/'><span class="fa fa-support mr-3"></span>Support</a>
+                </li>
+                <li hidden id='sign-out-item' class="active">
+                    <a id='sign-out-button' href='/'><span class="fa fa-sign-out mr-3"></span>Sign Out</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content  -->
+        <div id="content" class="p-4 p-md-5 pt-5">
+            <h2 class="mb-4">Password Bank</h2>
+            <ul hidden id='domains-list'></ul>
+            <!-- <form hidden id="input-form" action="#">
+                <div>
+                    <label for="input-domain">Domain...</label><br>
+                    <input type="text" id="input-domain" autocomplete="off"><br>
+                    <label for="input-username">Username...</label><br>
+                    <input type="text" id="input-username" autocomplete="off"><br>
+                    <label for="input-password">Password...</label><br>
+                    <input type="text" id="input-password" autocomplete="off"><br>
+                </div>
+                <button id="input-button" type="submit">Store</button>
+            </form> -->
+            <!-- <div class="row">
+                <div class="col-4">
+                    <div class="list-group" id="list-tab" role="tablist">
+                        <a class="list-group-item list-group-item-action active" id="list-home-list" data-toggle="list"
+                            href="#list-home" role="tab" aria-controls="home">Home</a>
+                        <a class="list-group-item list-group-item-action" id="list-profile-list" data-toggle="list"
+                            href="#list-profile" role="tab" aria-controls="profile">Profile</a>
+                        <a class="list-group-item list-group-item-action" id="list-messages-list" data-toggle="list"
+                            href="#list-messages" role="tab" aria-controls="messages">Messages</a>
+                        <a class="list-group-item list-group-item-action" id="list-settings-list" data-toggle="list"
+                            href="#list-settings" role="tab" aria-controls="settings">Settings</a>
+                    </div>
+                </div>
+                <div class="col-8">
+                    <div class="tab-content" id="nav-tabContent">
+                        <div class="tab-pane fade show active" id="list-home" role="tabpanel"
+                            aria-labelledby="list-home-list">...</div>
+                        <div class="tab-pane fade" id="list-profile" role="tabpanel"
+                            aria-labelledby="list-profile-list">...</div>
+                        <div class="tab-pane fade" id="list-messages" role="tabpanel"
+                            aria-labelledby="list-messages-list">...</div>
+                        <div class="tab-pane fade" id="list-settings" role="tabpanel"
+                            aria-labelledby="list-settings-list">...</div>
+                    </div>
+                </div>
+            </div> -->
+            <form hidden id="input-form" action="#">
+                <div class="form-group">
+                    <label for="input-domain">Domain</label>
+                    <input type="text" class="form-control" id="input-domain"
+                        aria-describedby="domainHelp" placeholder="Enter domain">
+                    <small id="domainHelp" class="form-text text-muted">
+                        The domain/website whose login you want to store.
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label for="input-username">Username</label>
+                    <input type="text" class="form-control" id="input-username" aria-describedby="usernameHelp"
+                        placeholder="Enter login username">
+                    <small id="usernameHelp" class="form-text text-muted">Login username (generally as email).</small>
+                </div>
+                <div class="form-group">
+                    <label for="input-password">Password</label>
+                    <input type="text" class="form-control" id="input-password" placeholder="Password">
+                </div>
+                <button id="input-button" type="submit" class="btn btn-primary">Store</button>
+            </form>
+        </div>
+    </div>
 </body>
 
 </html>
